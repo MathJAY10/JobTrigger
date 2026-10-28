@@ -362,8 +362,10 @@ export default function Dashboard() {
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: "14px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
                   <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>Telegram Dispatch</div>
-                  <div style={{ fontSize: "18px", fontWeight: "700", color: scanResult.telegram?.sent ? "#10b981" : "#9ca3af" }}>
-                    {scanResult.telegram?.sent ? "✅ Sent" : scanResult.telegram?.error ? "❌ Config Missing" : "Heartbeat Off"}
+                  <div style={{ fontSize: "16px", fontWeight: "700", color: scanResult.telegram?.sent ? "#10b981" : "#ef4444" }}>
+                    {scanResult.telegram?.sent
+                      ? `✅ Sent (${scanResult.telegram?.messageCount || 1} msg)`
+                      : `❌ ${scanResult.telegram?.error || "Not Sent"}`}
                   </div>
                 </div>
               </div>

@@ -17,7 +17,7 @@ async function sendRawTelegramMessage(
   token: string,
   chatId: string,
   text: string
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string }> {
   const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
   try {
@@ -31,13 +31,14 @@ async function sendRawTelegramMessage(
       },
       { timeout: 10000 }
     );
-    return res.data?.ok === true;
+    return { success: res.data?.ok === true };
   } catch (err: any) {
-    console.error(
-      "Telegram API error:",
-      err?.response?.data || err?.message || err
-    );
-    return false;
+    const errorDetail =
+      err?.response?.data?.description ||
+      err?.message ||
+      "Unknown Telegram error";
+    console.error("Telegram API error:", errorDetail);
+    return { success: false, error: String(errorDetail) };
   }
 }
 
@@ -176,11 +177,14 @@ export async function sendTelegramAlert(
 
   const chunks = chunkMessage(fullHtml);
   let successCount = 0;
+  let lastError: string | undefined;
 
   for (const chunk of chunks) {
-    const success = await sendRawTelegramMessage(token, chatId, chunk);
-    if (success) {
+    const res = await sendRawTelegramMessage(token, chatId, chunk);
+    if (res.success) {
       successCount++;
+    } else {
+      lastError = res.error;
     }
     // Small inter-message pause to prevent Telegram 429 rate limit
     if (chunks.length > 1) {
@@ -191,5 +195,6 @@ export async function sendTelegramAlert(
   return {
     sent: successCount > 0,
     messageCount: successCount,
+    error: successCount === 0 ? lastError : undefined,
   };
 }
