@@ -4,11 +4,17 @@ import { useState } from "react";
 import { SCRAPE_TARGETS, TARGET_KEYWORDS } from "@/config/targets";
 import { JobMatch } from "@/types";
 
+// Auto-read the cron secret from the public env var injected at build time.
+// In Vercel: set NEXT_PUBLIC_CRON_SECRET = same value as CRON_SECRET in Project Settings.
+const AUTO_CRON_SECRET = process.env.NEXT_PUBLIC_CRON_SECRET || "";
+
 export default function Dashboard() {
   const [isRunning, setIsRunning] = useState(false);
-  const [cronToken, setCronToken] = useState("");
+  // Pre-fill from env var so the button works on production without manual input
+  const [cronToken, setCronToken] = useState(AUTO_CRON_SECRET);
   const [scanResult, setScanResult] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<"targets" | "keywords" | "results">("targets");
+  const isAutoFilled = !!AUTO_CRON_SECRET;
 
   const handleRunManualScan = async () => {
     setIsRunning(true);
@@ -110,22 +116,44 @@ export default function Dashboard() {
           }}
         >
           <div style={{ flex: "1", minWidth: "260px" }}>
-            <input
-              type="password"
-              placeholder="CRON_SECRET (leave blank if running locally without secret)"
-              value={cronToken}
-              onChange={(e) => setCronToken(e.target.value)}
-              style={{
-                width: "100%",
-                background: "rgba(0, 0, 0, 0.35)",
-                border: "1px solid var(--border-color)",
-                padding: "11px 16px",
-                borderRadius: "8px",
-                color: "#fff",
-                fontSize: "14px",
-                outline: "none",
-              }}
-            />
+            {isAutoFilled ? (
+              // Production: secret is pre-configured, show a locked indicator
+              <div
+                style={{
+                  width: "100%",
+                  background: "rgba(16, 185, 129, 0.08)",
+                  border: "1px solid rgba(16, 185, 129, 0.35)",
+                  padding: "11px 16px",
+                  borderRadius: "8px",
+                  color: "#10b981",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <span>🔐</span>
+                <span style={{ fontWeight: "600" }}>CRON_SECRET auto-configured from environment</span>
+              </div>
+            ) : (
+              // Local dev: show password input for manual entry
+              <input
+                type="password"
+                placeholder="Enter CRON_SECRET (required on production)"
+                value={cronToken}
+                onChange={(e) => setCronToken(e.target.value)}
+                style={{
+                  width: "100%",
+                  background: "rgba(0, 0, 0, 0.35)",
+                  border: "1px solid var(--border-color)",
+                  padding: "11px 16px",
+                  borderRadius: "8px",
+                  color: "#fff",
+                  fontSize: "14px",
+                  outline: "none",
+                }}
+              />
+            )}
           </div>
 
           <button
