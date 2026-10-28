@@ -167,15 +167,9 @@ export async function sendTelegramAlert(
   }
 
   const hasMatches = summary.totalMatches > 0;
-  const alwaysHeartbeat =
-    options?.alwaysHeartbeat ??
-    process.env.ALWAYS_SEND_HEARTBEAT === "true";
 
-  if (!hasMatches && !alwaysHeartbeat) {
-    // No matches and heartbeat disabled
-    return { sent: false, messageCount: 0 };
-  }
-
+  // Always send: either a job alert (if matches found) or a daily heartbeat (if no matches).
+  // This ensures you always get a Telegram message after every scan, confirming the bot is alive.
   const fullHtml = hasMatches
     ? buildJobAlertHtml(summary)
     : buildHeartbeatHtml(summary);
